@@ -1,12 +1,15 @@
 import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class TelegramLoginDto {
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }) => value?.trim())
   telegram_id: string;
 
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }) => value?.trim())
   code: string;
 }
 
