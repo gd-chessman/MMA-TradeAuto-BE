@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import * as cookieParser from 'cookie-parser';
@@ -7,6 +8,11 @@ import { DatabaseExceptionFilter } from './exceptions/database-exception.filter'
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalFilters(new DatabaseExceptionFilter());
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }));
 
   const configService = app.get(ConfigService);
 
@@ -39,6 +45,10 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Content-Type, Accept',
     credentials: true, // Cho phép cookie
+  });
+
+  app.setGlobalPrefix('api/v1', {
+    exclude: ['/'],
   });
 
   app.use(cookieParser());

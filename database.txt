@@ -12,7 +12,7 @@ Table wallets {
   user_id int [not null]
   sol_address varchar(100) [unique, not null]
   private_key text [not null] // Nên mã hoá trước khi lưu
-  wallet_type varchar(20) [not null, default: 'other'] // 'main', 'other', 'import'
+  wallet_type varchar(20) [not null, default: 'other'] // enum: 'main', 'other', 'import' - ví đầu tiên luôn là 'main'
   created_at timestamp [default: `now()`]
 
   Indexes {
@@ -23,7 +23,7 @@ Table wallets {
 
 Table verify_codes {
   id int [pk, increment]
-  user_id int // Có thể null nếu verify trước khi tạo user
+  user_id int // Liên kết đến users.id (không null trong flow hiện tại)
   code varchar(255) [not null]
   type int [not null] // 1=email_verification, 2=password_reset, 3=telegram_link...
   is_used boolean [default: false]
