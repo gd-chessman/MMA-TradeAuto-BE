@@ -1,0 +1,94 @@
+Table users {
+  id int [pk, increment]
+  full_name varchar(255)
+  email varchar(255) [unique, not null]
+  is_verified_email boolean [default: false]
+  telegram_id varchar(50) [unique]
+  created_at timestamp [default: `now()`]
+}
+
+Table wallets {
+  id int [pk, increment]
+  user_id int [not null]
+  sol_address varchar(100) [unique, not null]
+  private_key text [not null] // Nên mã hoá trước khi lưu
+  wallet_type varchar(20) [not null, default: 'other'] // 'main', 'other', 'import'
+  created_at timestamp [default: `now()`]
+
+  Indexes {
+    (user_id, wallet_type) [unique, note: 'chỉ áp dụng cho wallet_type = main'] 
+    // dbdiagram.io không hỗ trợ partial index, nên xử lý ràng buộc này ở code
+  }
+}
+
+Table verify_codes {
+  id int [pk, increment]
+  user_id int // Có thể null nếu verify trước khi tạo user
+  code varchar(12) [not null]
+  type int [not null] // 1=email_verification, 2=password_reset, 3=telegram_link...
+  is_used boolean [default: false]
+  expires_at timestamp [not null]
+  created_at timestamp [default: `now()`]
+}
+
+Table trades {
+  id int [pk, increment]
+  wallet_id int [not null]
+  trade_type varchar(10) [not null] // 'buy' hoặc 'sell'
+  token_symbol varchar(20) [not null] // ví dụ: SOL, USDT, MMP
+  token_address varchar(100) [not null] // địa chỉ token trên blockchain
+  amount numeric(36, 18) [not null] // số lượng token
+  price_usd numeric(20, 8) [not null] // giá USD tại thời điểm giao dịch
+  total_usd numeric(20, 8) [not null] // amount * price_usd
+  status varchar(20) [not null, default: 'pending'] // pending, success, failed
+  tx_hash varchar(200) // transaction hash trên blockchain
+  created_at timestamp [default: `now()`]
+}
+
+Ref: wallets.user_id > users.id
+Ref: verify_codes.user_id > users.id
+Ref: trades.wallet_id > wallets.id
+
+
+Table auto_trade_configs {
+  id int [pk, increment]
+  user_id int [not null] // chủ sở hữu cấu hình
+  trade_type varchar(10) [not null] // 'buy' hoặc 'sell'
+  token_symbol varchar(20) [not null] // ví dụ: SOL, USDT, MMP
+  token_address varchar(100) [not null] // địa chỉ token
+  global_percent numeric(5, 2) [not null] // phần trăm tổng dùng cho Buy All / Sell All
+  is_active boolean [default: true] // cấu hình đang bật/tắt
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table auto_trade_wallets {
+  id int [pk, increment]
+  auto_trade_config_id int [not null]
+  wallet_id int [not null]
+  wallet_percent numeric(5, 2) [not null, default: 0.00] // phần trăm riêng cho ví này
+  created_at timestamp [default: `now()`]
+}
+
+Ref: auto_trade_configs.user_id > users.id
+Ref: auto_trade_wallets.auto_trade_config_id > auto_trade_configs.id
+Ref: auto_trade_wallets.wallet_id > wallets.id
+
+
+Table withdrawals {
+  id int [pk, increment]
+  wallet_id int [not null]                        // liên kết đến wallets.id
+  from_sol_address varchar(100) [not null]       // địa chỉ ví nguồn (snapshot)
+  to_sol_address varchar(100) [not null]         // địa chỉ ví đích
+  token_symbol varchar(20) [not null]            // ví dụ: SOL, USDT, MMP
+  token_address varchar(100) [not null]          // mint address hoặc 'SOL'                        // URL icon token (lưu ngay trong bảng này)
+  amount numeric(20, 8) [not null]
+  status varchar(20) [not null, default: 'pending']
+  tx_hash varchar(200)
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Ref: withdrawals.wallet_id > wallets.id
+
+
