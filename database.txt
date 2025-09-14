@@ -24,7 +24,7 @@ Table wallets {
 Table verify_codes {
   id int [pk, increment]
   user_id int // Có thể null nếu verify trước khi tạo user
-  code varchar(12) [not null]
+  code varchar(255) [not null]
   type int [not null] // 1=email_verification, 2=password_reset, 3=telegram_link...
   is_used boolean [default: false]
   expires_at timestamp [not null]
