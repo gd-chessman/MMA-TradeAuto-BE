@@ -28,7 +28,7 @@ export class GoogleAuthService {
         this.redirectUri = redirectUri;
     }
 
-    async exchangeCodeForToken(code: string, path: string = 'security'): Promise<GoogleTokenResponse> {
+    async exchangeCodeForToken(code: string, path: string = ''): Promise<GoogleTokenResponse> {
         try {
             // Decode URL encoded code
             const decodedCode = decodeURIComponent(code);
