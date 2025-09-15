@@ -1,7 +1,7 @@
 import { Controller, Post, Body, Res, Req, Get, UseGuards } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
-import { TelegramLoginDto, LoginResponseDto, UserInfoDto } from './auth.dto';
+import { TelegramLoginDto, GoogleLoginDto, LoginResponseDto, UserInfoDto } from './auth.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
@@ -15,6 +15,15 @@ export class AuthController {
   ): Promise<LoginResponseDto> {
     return this.authService.loginWithTelegram(loginDto, response);
   }
+
+  @Post('login/google')
+  async loginWithGoogle(
+    @Body() loginDto: GoogleLoginDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<LoginResponseDto> {
+    return this.authService.loginWithGoogle(loginDto, response);
+  }
+
 
   @Post('refresh')
   async refreshToken(

@@ -6,7 +6,11 @@ import { ConfigService } from '@nestjs/config';
 import { Response, Request } from 'express';
 import { User } from '../users/user.entity';
 import { VerifyCode } from '../verify-codes/verify-code.entity';
-import { TelegramLoginDto, LoginResponseDto, UserInfoDto } from './auth.dto';
+import { Wallet, WalletType } from '../wallets/wallet.entity';
+import { TelegramLoginDto, GoogleLoginDto, LoginResponseDto, UserInfoDto, GoogleUserInfo } from './auth.dto';
+import { GoogleAuthService } from './google-auth.service';
+import { Keypair } from '@solana/web3.js';
+import * as bs58 from 'bs58';
 
 @Injectable()
 export class AuthService {
@@ -15,9 +19,20 @@ export class AuthService {
     private userRepository: Repository<User>,
     @InjectRepository(VerifyCode)
     private verifyCodeRepository: Repository<VerifyCode>,
+    @InjectRepository(Wallet)
+    private walletRepository: Repository<Wallet>,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private googleAuthService: GoogleAuthService,
   ) {}
+
+  private generateSolanaWallet() {
+    const keypair = Keypair.generate();
+    return {
+      publicKey: keypair.publicKey.toBase58(),
+      privateKey: bs58.encode(keypair.secretKey)
+    };
+  }
 
   async loginWithTelegram(loginDto: TelegramLoginDto, response: Response): Promise<LoginResponseDto> {
     const { telegram_id, code } = loginDto;
@@ -181,6 +196,57 @@ export class AuthService {
       email: user.email,
       is_verified_email: user.is_verified_email,
       created_at: user.created_at,
+    };
+  }
+
+  async loginWithGoogle(loginDto: GoogleLoginDto, response: Response): Promise<LoginResponseDto> {
+    const { code, path = 'login-email' } = loginDto;
+    
+    // Exchange authorization code for access token
+    const tokenResponse = await this.googleAuthService.exchangeCodeForToken(code, path);
+    
+    // Verify Google ID token
+    const googleUser: GoogleUserInfo = await this.googleAuthService.verifyIdToken(tokenResponse.id_token);
+
+    // Tìm user theo email
+    let user = await this.userRepository.findOne({
+      where: { email: googleUser.email },
+    });
+
+    // Tạo user mới nếu chưa tồn tại
+    if (!user) {
+      user = this.userRepository.create({
+        email: googleUser.email,
+        full_name: googleUser.name,
+        is_verified_email: googleUser.email_verified,
+      });
+      await this.userRepository.save(user);
+
+      // Tạo ví Solana cho user mới
+      const solanaWallet = this.generateSolanaWallet();
+      const wallet = this.walletRepository.create({
+        user_id: user.id,
+        sol_address: solanaWallet.publicKey,
+        private_key: solanaWallet.privateKey,
+        wallet_type: WalletType.MAIN, // Ví đầu tiên luôn là MAIN
+      });
+      await this.walletRepository.save(wallet);
+    } else {
+      // Cập nhật thông tin user nếu đã tồn tại
+      user.is_verified_email = googleUser.email_verified;
+      await this.userRepository.save(user);
+    }
+
+    // Tạo access token và refresh token
+    const accessToken = this.generateAccessToken(user);
+    const refreshToken = this.generateRefreshToken(user);
+
+    // Set HTTP only cookies
+    this.setAccessTokenCookie(response, accessToken);
+    this.setRefreshTokenCookie(response, refreshToken);
+
+    return {
+      message: 'Login successful',
     };
   }
 

@@ -3,16 +3,20 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { HttpModule } from '@nestjs/axios';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
+import { GoogleAuthService } from './google-auth.service';
 import { User } from '../users/user.entity';
 import { VerifyCode } from '../verify-codes/verify-code.entity';
+import { Wallet } from '../wallets/wallet.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, VerifyCode]),
+    TypeOrmModule.forFeature([User, VerifyCode, Wallet]),
     PassportModule,
+    HttpModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -25,7 +29,7 @@ import { VerifyCode } from '../verify-codes/verify-code.entity';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, GoogleAuthService],
   exports: [AuthService],
 })
 export class AuthModule {}

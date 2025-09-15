@@ -24,13 +24,53 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Backend API cho ứng dụng MMA Trade Auto - Hệ thống giao dịch tự động với tích hợp Telegram Bot và Google OAuth.
+
+### Tính năng chính:
+- 🔐 **Authentication**: Đăng nhập bằng Telegram và Google OAuth
+- 🤖 **Telegram Bot**: Tích hợp bot để gửi verification codes
+- 💰 **Wallet Management**: Quản lý ví Solana cho users
+- 🔄 **Auto Registration**: Tự động tạo user và ví khi đăng nhập Google
+- 🛡️ **Security**: JWT tokens với HTTP-only cookies
 
 ## Project setup
 
 ```bash
 $ yarn install
 ```
+
+## Environment Variables
+
+Tạo file `.env` với các biến môi trường sau:
+
+```env
+# Database
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USERNAME=your_username
+DATABASE_PASSWORD=your_password
+DATABASE_NAME=mma_trade_auto
+
+# JWT Authentication
+JWT_SECRET=your_super_secret_jwt_key_here
+JWT_ACCESS_EXPIRES_IN=15m
+JWT_REFRESH_SECRET=your_super_secret_refresh_key_here
+JWT_REFRESH_EXPIRES_IN=7d
+
+# Telegram Bot
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+TELEGRAM_WORKER_URL=https://api.telegram.org
+FRONTEND_URL_TELEGRAM_REDIRECT=http://localhost:3000/auth/telegram
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your_google_client_id_here
+GOOGLE_CLIENT_SECRET=your_google_client_secret_here
+FRONTEND_URL_GOOGLE_REDIRECT=http://localhost:3000/auth/google
+```
+
+## API Documentation
+
+Chi tiết API documentation xem tại: [src/modules/auth/README.md](./src/modules/auth/README.md)
 
 ## Compile and run the project
 
