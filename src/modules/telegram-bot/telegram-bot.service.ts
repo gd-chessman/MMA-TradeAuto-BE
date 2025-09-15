@@ -107,6 +107,9 @@ export class TelegramBotService implements OnModuleInit {
         const chatId = message.chat.id;
         const text = message.text;
         const telegramId = message.from?.id?.toString();
+        const firstName = message.from?.first_name || '';
+        const lastName = message.from?.last_name || '';
+        const fullName = `${firstName} ${lastName}`.trim();
 
         if (!telegramId) {
             await this.sendMessage(chatId, '❌ Error: Unable to identify Telegram ID.');
@@ -128,10 +131,11 @@ export class TelegramBotService implements OnModuleInit {
                     try {
                         user = this.userRepository.create({
                             telegram_id: telegramId,
+                            full_name: fullName || null,
                         });
                         await this.userRepository.save(user);
                         isNewUser = true;
-                        this.logger.log(`Created new user with telegram_id: ${telegramId}`);
+                        this.logger.log(`Created new user with telegram_id: ${telegramId}, full_name: ${fullName}`);
                     } catch (error) {
                         if (error.code === '23505') { // PostgreSQL unique violation error code
                             user = await this.userRepository.findOne({
