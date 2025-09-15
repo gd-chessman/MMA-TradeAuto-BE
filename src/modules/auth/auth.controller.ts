@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Res, Req, Get, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, Get, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { TelegramLoginDto, GoogleLoginDto, LoginResponseDto, UserInfoDto } from './auth.dto';
@@ -9,6 +9,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login/telegram')
+  @HttpCode(HttpStatus.OK)
   async loginWithTelegram(
     @Body() loginDto: TelegramLoginDto,
     @Res({ passthrough: true }) response: Response,
@@ -17,6 +18,7 @@ export class AuthController {
   }
 
   @Post('login/google')
+  @HttpCode(HttpStatus.OK)
   async loginWithGoogle(
     @Body() loginDto: GoogleLoginDto,
     @Res({ passthrough: true }) response: Response,
@@ -26,6 +28,7 @@ export class AuthController {
 
 
   @Post('refresh')
+  @HttpCode(HttpStatus.OK)
   async refreshToken(
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
@@ -34,6 +37,7 @@ export class AuthController {
   }
 
   @Post('logout')
+  @HttpCode(HttpStatus.OK)
   async logout(
     @Res({ passthrough: true }) response: Response,
   ): Promise<LoginResponseDto> {
