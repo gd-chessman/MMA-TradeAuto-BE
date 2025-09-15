@@ -18,6 +18,9 @@ export class Wallet {
   @Column({ type: 'varchar', length: 100, unique: true })
   sol_address: string;
 
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  name: string;
+
   @Column({ type: 'text' })
   private_key: string;
 
